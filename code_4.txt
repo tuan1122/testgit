@@ -1,0 +1,12 @@
+<template>
+  <el-button type="primary" @click="showUpload = true"> Mở Upload </el-button>
+
+  <FileUploadDialog v-model:isVisible="showUpload" />
+</template>
+
+<script setup>
+import { ref } from 'vue';
+import FileUploadDialog from './view_1.vue';
+
+const showUpload = ref(false);
+</script>
