@@ -1,0 +1,43 @@
+<script setup>
+import { ref } from 'vue'
+
+const rightSize = ref(0)          // ban đầu đóng
+const minRightSize = 120
+const maxRightSize = 450
+
+const isOpen = ref(false)         // trạng thái ta tự quản
+
+function onRightUpdate(val) {
+  // Icon collapse luôn emit val = 0 khi click
+  if (val === 0) {
+    // Toggle trạng thái
+    isOpen.value = !isOpen.value
+    rightSize.value = isOpen.value ? maxRightSize : 0
+  } 
+  else {
+    // Kéo chuột bình thường
+    rightSize.value = val
+    isOpen.value = val > 0
+  }
+}
+</script>
+
+<template>
+  <el-splitter style="height:400px;">
+    
+    <el-splitter-panel>
+      Nội dung chính
+    </el-splitter-panel>
+
+    <el-splitter-panel
+      :size="rightSize"
+      :min-size="minRightSize"
+      :max-size="maxRightSize"
+      collapsible
+      @update:size="onRightUpdate"
+    >
+      Panel phải
+    </el-splitter-panel>
+
+  </el-splitter>
+</template>

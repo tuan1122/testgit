@@ -1,0 +1,70 @@
+<script setup>
+import { ref, nextTick } from 'vue';
+
+const inputRef = ref();
+const display = ref('');
+const rawValue = ref(null);
+
+function formatNumber(num) {
+  return new Intl.NumberFormat('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(num);
+}
+
+async function onInput(val) {
+  const inputEl = inputRef.value.input;
+  const cursorPos = inputEl.selectionStart;
+
+  // chỉ cho số và .
+  let clean = val.replace(/[^\d.]/g, '');
+
+  // chỉ cho 1 dấu .
+  const parts = clean.split('.');
+  if (parts.length > 2) {
+    clean = parts[0] + '.' + parts.slice(1).join('');
+  }
+
+  // giới hạn 2 số thập phân
+  if (parts[1]?.length > 2) {
+    clean = parts[0] + '.' + parts[1].slice(0, 2);
+  }
+
+  if (!clean) {
+    display.value = '';
+    rawValue.value = null;
+    return;
+  }
+
+  rawValue.value = Number(clean);
+
+  const formatted = formatNumber(rawValue.value);
+  display.value = formatted;
+
+  await nextTick();
+
+  // giữ cursor
+  const newPos = cursorPos + (formatted.length - val.length);
+  inputEl.setSelectionRange(newPos, newPos);
+}
+
+function onBlur() {
+  if (rawValue.value == null) return;
+  display.value = formatNumber(rawValue.value);
+}
+</script>
+
+<template>
+  <el-input
+    ref="inputRef"
+    v-model="display"
+    @input="onInput"
+    @blur="onBlur"
+    style="width: 260px"
+    placeholder="Enter amount"
+  >
+    <template #prefix>$</template>
+  </el-input>
+
+  <p>Raw number1: {{ rawValue }}</p>
+</template>
