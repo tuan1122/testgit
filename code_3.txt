@@ -1,0 +1,67 @@
+<template>
+  <el-button type="primary" @click="visible = true">Upload</el-button>
+
+  <el-dialog v-model="visible" title="Upload files" width="450px">
+    <el-upload
+      drag
+      multiple
+      :auto-upload="false"
+      :file-list="fileList"
+      :on-change="handleChange"
+      :on-remove="handleRemove"
+      accept="image/*,application/pdf"
+      list-type="text"
+      class="compact-upload"
+    >
+      <el-icon><upload-filled /></el-icon>
+      <div style="font-size: 13px; color: #666">
+        Kéo thả file vào đây hoặc click để chọn
+      </div>
+    </el-upload>
+
+    <template #footer>
+      <el-button size="small" @click="visible = false">Đóng</el-button>
+      <el-button size="small" type="primary" @click="submitUpload">
+        Upload
+      </el-button>
+    </template>
+  </el-dialog>
+</template>
+
+<script setup lang="ts">
+import { ref } from 'vue';
+import type { UploadFile } from 'element-plus';
+import { UploadFilled } from '@element-plus/icons-vue';
+
+const visible = ref(false);
+const fileList = ref<UploadFile[]>([]);
+
+const handleChange = (_: UploadFile, files: UploadFile[]) => {
+  fileList.value = files;
+};
+
+const handleRemove = (_: UploadFile, files: UploadFile[]) => {
+  fileList.value = files;
+};
+
+const submitUpload = async () => {
+  if (!fileList.value.length) return;
+
+  const formData = new FormData();
+  fileList.value.forEach((f) => formData.append('files', f.raw!));
+
+  await axios.post('/api/upload', formData);
+  fileList.value = [];
+  visible.value = false;
+};
+</script>
+
+<style scoped>
+.compact-upload .el-upload-dragger {
+  padding: 12px;
+}
+.compact-upload .el-icon {
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+</style>
