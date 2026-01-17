@@ -1,70 +1,66 @@
-<script setup>
-import { ref, nextTick } from 'vue';
+<template>
+  <div style="padding: 40px">
+    <el-input
+      v-model="display"
+      style="width: 260px"
+      placeholder="Enter USD"
+      @input="handleInput"
+      @blur="formatFinal"
+    >
+    </el-input>
 
-const inputRef = ref();
-const display = ref('');
-const rawValue = ref(null);
+    <p>Number value: {{ value }}</p>
+  </div>
+</template>
 
-function formatNumber(num) {
-  return new Intl.NumberFormat('en-US', {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(num);
-}
+<script setup lang="ts">
+import { ref } from 'vue';
 
-async function onInput(val) {
-  const inputEl = inputRef.value.input;
-  const cursorPos = inputEl.selectionStart;
+// ====== STATE ======
+const value = ref<number>(124); // số thật (mặc định)
+const display = ref('123.00'); // chuỗi hiển thị (mặc định)
 
-  // chỉ cho số và .
-  let clean = val.replace(/[^\d.]/g, '');
+// ====== Khi đang gõ ======
+function handleInput(val: string) {
+  // chỉ cho nhập số và dấu .
+  let raw = val.replace(/[^\d.]/g, '');
 
   // chỉ cho 1 dấu .
-  const parts = clean.split('.');
+  const parts = raw.split('.');
   if (parts.length > 2) {
-    clean = parts[0] + '.' + parts.slice(1).join('');
+    raw = parts[0] + '.' + parts.slice(1).join('');
   }
 
-  // giới hạn 2 số thập phân
+  // giới hạn 2 số sau dấu .
   if (parts[1]?.length > 2) {
-    clean = parts[0] + '.' + parts[1].slice(0, 2);
+    raw = parts[0] + '.' + parts[1].slice(0, 2);
   }
 
-  if (!clean) {
-    display.value = '';
-    rawValue.value = null;
-    return;
-  }
+  // cập nhật display khi đang gõ
+  display.value = raw;
 
-  rawValue.value = Number(clean);
-
-  const formatted = formatNumber(rawValue.value);
-  display.value = formatted;
-
-  await nextTick();
-
-  // giữ cursor
-  const newPos = cursorPos + (formatted.length - val.length);
-  inputEl.setSelectionRange(newPos, newPos);
+  // cập nhật số thật
+  value.value = raw === '' || raw === '.' ? 0 : Number(raw);
 }
 
-function onBlur() {
-  if (rawValue.value == null) return;
-  display.value = formatNumber(rawValue.value);
+// ====== Khi rời khỏi input ======
+function formatFinal() {
+  display.value = value.value.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
+
+function normalizeUsd(val: number | string): string {
+  if (val === null || val === undefined || val === '') return '0.00';
+
+  const num = Number(val);
+
+  if (isNaN(num)) return '0.00';
+
+  return num.toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 }
 </script>
-
-<template>
-  <el-input
-    ref="inputRef"
-    v-model="display"
-    @input="onInput"
-    @blur="onBlur"
-    style="width: 260px"
-    placeholder="Enter amount"
-  >
-    <template #prefix>$</template>
-  </el-input>
-
-  <p>Raw number1: {{ rawValue }}</p>
-</template>
