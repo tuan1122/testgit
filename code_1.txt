@@ -22,25 +22,47 @@ const display = ref('123.00'); // chuỗi hiển thị (mặc định)
 
 // ====== Khi đang gõ ======
 function handleInput(val: string) {
-  // chỉ cho nhập số và dấu .
+  // Chỉ cho nhập số và dấu .
   let raw = val.replace(/[^\d.]/g, '');
 
-  // chỉ cho 1 dấu .
-  const parts = raw.split('.');
-  if (parts.length > 2) {
-    raw = parts[0] + '.' + parts.slice(1).join('');
+  // Chỉ cho tồn tại 1 dấu .
+  const firstDot = raw.indexOf('.');
+  if (firstDot !== -1) {
+    raw =
+      raw.substring(0, firstDot + 1) +
+      raw.substring(firstDot + 1).replace(/\./g, '');
   }
 
-  // giới hạn 2 số sau dấu .
-  if (parts[1]?.length > 2) {
-    raw = parts[0] + '.' + parts[1].slice(0, 2);
+  // Tách phần nguyên và thập phân
+  let [intPart, decPart] = raw.split('.');
+
+  // Giới hạn 10 chữ số phần nguyên
+  if (intPart.length > 10) {
+    intPart = intPart.slice(0, 10);
   }
 
-  // cập nhật display khi đang gõ
+  // Giới hạn 2 chữ số phần thập phân
+  if (decPart !== undefined) {
+    decPart = decPart.slice(0, 2);
+    raw = intPart + '.' + decPart;
+  } else {
+    raw = intPart;
+  }
+
+  // Trường hợp người dùng vừa gõ dấu "."
+  if (raw.endsWith('.') && decPart === undefined) {
+    raw = intPart + '.';
+  }
+
+  // Cập nhật display
   display.value = raw;
 
-  // cập nhật số thật
-  value.value = raw === '' || raw === '.' ? 0 : Number(raw);
+  // Cập nhật giá trị số thực
+  if (raw === '' || raw === '.') {
+    value.value = 0;
+  } else {
+    value.value = Number(raw);
+  }
 }
 
 // ====== Khi rời khỏi input ======

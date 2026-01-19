@@ -1,0 +1,46 @@
+import { uploadFiles } from '@/services/upload.service';
+import type { UploadUserFile } from 'element-plus';
+
+async function submitUpload() {
+  if (fileList.value.length === 0) return;
+
+  // Lấy File[] từ UploadUserFile
+  const files: File[] = fileList.value.map(
+    (f: UploadUserFile) => f.raw as File
+  );
+
+  try {
+    const res = await uploadFiles(files);
+    console.log('Upload success:', res.data);
+    localVisible.value = false;
+  } catch (err) {
+    console.error('Upload failed', err);
+  }
+}
+
+
+import type { UploadUserFile } from 'element-plus';
+
+const fileList = ref<UploadUserFile[]>([]);
+
+
+
+export function uploadFiles(files: File[]): Promise<AxiosResponse<UploadResponse[]>> {
+  const formData = new FormData();
+
+  files.forEach((file) => {
+    formData.append('files', file);
+  });
+
+  return api.post<UploadResponse[]>('/upload/multi', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+}
+
+
+@PostMapping("/upload/multi")
+public List<FileResponse> uploadMulti(@RequestParam("files") MultipartFile[] files) {
+    ...
+}
